@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AC Math - app</title>
+<link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css">
+<style>
+  :root { --accent: #3a6a8a; }
+  h1 { color: var(--accent); margin-bottom: 0.2em; }
+  .tag { color: var(--accent); font-style: italic; }
+  .card { border: 1px solid #ddd; border-left: 4px solid var(--accent); padding: 1em 1.2em; margin: 1.2em 0; border-radius: 4px; }
+  .big { font-size: 1.2rem; font-weight: 700; color: var(--accent); margin-top: 0.8em; }
+  .err { color: #b00; font-weight: 700; }
+  label { display: block; margin-top: 0.6em; font-size: 0.9em; }
+  input, select { max-width: 12em; }
+  .foot { margin-top: 2.5em; font-size: 0.85em; color: #777; }
+</style>
+</head>
+<body>
+<h1>AC Math</h1>
+<p class="tag">Size truth, power truth and bill truth - labeled norms, honest arithmetic.</p>
+
+<div class="card">
+  <h3>The size truth</h3>
+  <label for="s-sqft">Room area (sq ft)</label>
+  <input id="s-sqft" type="number" step="any" value="300">
+  <label for="s-height">Ceiling height (ft)</label>
+  <input id="s-height" type="number" step="any" value="8">
+  <p class="big" id="s-out"></p>
+</div>
+
+<div class="card">
+  <h3>The power truth</h3>
+  <label for="p-btu">Unit rating (BTU)</label>
+  <input id="p-btu" type="number" step="any" value="8000">
+  <label for="p-ceer">CEER (yellow sticker)</label>
+  <input id="p-ceer" type="number" step="any" value="11">
+  <p class="big" id="p-out"></p>
+</div>
+
+<div class="card">
+  <h3>The bill truth</h3>
+  <label for="b-watts">Draw while running (watts)</label>
+  <input id="b-watts" type="number" step="any" value="727">
+  <label for="b-hours">Hours per day</label>
+  <input id="b-hours" type="number" step="any" value="8">
+  <label for="b-rate">Rate ($ per kWh)</label>
+  <input id="b-rate" type="number" step="any" value="0.17">
+  <p class="big" id="b-out"></p>
+</div>
+
+<p class="foot">Chart and adjustments are labeled norms from the Energy Star sizing guidance - sizing here is arithmetic, not an electrical verdict; a licensed electrician owns the circuit questions.</p>
+
+<script src="engine.js"></script>
+<script>
+function g(id){ return document.getElementById(id); }
+function v(id){ var n = parseFloat(g(id).value); return isNaN(n) ? NaN : n; }
+function show(id, s, bad){ var el = g(id); el.textContent = s; el.className = bad ? "err big" : "big"; }
+
+function runSize(){
+  var args = [v("s-sqft"), v("s-height")];
+  var r = AcMath.sizePlan.apply(null, args);
+  if (r.error) return show("s-out", r.error, true);
+  show("s-out", AcMath.renderSize.apply(null, [r].concat(args)), false);
+}
+function runPower(){
+  var args = [v("p-btu"), v("p-ceer")];
+  var r = AcMath.powerPlan.apply(null, args);
+  if (r.error) return show("p-out", r.error, true);
+  show("p-out", AcMath.renderPower.apply(null, [r].concat(args)), false);
+}
+function runBill(){
+  var args = [v("b-watts"), v("b-hours"), v("b-rate")];
+  var r = AcMath.billPlan.apply(null, args);
+  if (r.error) return show("b-out", r.error, true);
+  show("b-out", AcMath.renderBill.apply(null, [r].concat(args)), false);
+}
+["s-sqft", "s-height"].forEach(function(id){ g(id).addEventListener("input", runSize); });
+["p-btu", "p-ceer"].forEach(function(id){ g(id).addEventListener("input", runPower); });
+["b-watts", "b-hours", "b-rate"].forEach(function(id){ g(id).addEventListener("input", runBill); });
+runSize(); runPower(); runBill();
+</script>
+</body>
+</html>
